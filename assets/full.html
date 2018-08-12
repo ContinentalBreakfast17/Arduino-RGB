@@ -1,0 +1,177 @@
+<style>
+.slider {
+	-webkit-appearance: none;
+	width: 100%;
+	height: 15px;
+	border-radius: 5px;   
+	background: #d3d3d3;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%; 
+	background: #4CAF50;
+	cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	background: #4CAF50;
+	cursor: pointer;
+}
+
+.channel_label {
+	width: 20px;
+	float: left;
+}
+
+.channel_textbox {
+	width: 50px;
+	float: right;
+}
+
+.content {
+	width: 100%;
+}
+
+.profile_panel {
+	width: 20%;
+	min-width: 40px;
+	height: 100%;
+	float: left;
+	background-color: #98b9de;
+ }
+
+.main {
+	overflow: hidden;
+}
+
+.space_right {
+	width: 10%;
+	min-width: 80px;
+	float: right;
+}
+
+.space_left {
+	width: 10%;
+	min-width: 80px;
+	float: left;
+}
+</style>
+
+<div class="content">
+
+	<div class="profile_panel">
+		<h3>  </h3>
+	</div>
+
+	<div class="space_left">
+		<h3> </h3>
+	</div>
+
+	<div class="space_right">
+		<h3> </h3>
+	</div>
+
+	<div id="rgb" class="main">
+		<br><br><br><br><br><br><br><br>
+		<input id="hex_color" type="color" id="html5colorpicker" v-on:change="hex" v-model="hex_val" style="width: 100%"><br><br>
+		<rgb-input channel="R" v-bind:val="r" v-on:color-change="color(0, $event)"></rgb-input><br><br>
+		<rgb-input channel="G" v-bind:val="g" v-on:color-change="color(1, $event)"></rgb-input><br><br>
+		<rgb-input channel="B" v-bind:val="b" v-on:color-change="color(2, $event)"></rgb-input><br><br>
+	</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script>
+	var rgb_controller = new Vue({
+		el: "#rgb",
+		data: {
+			hex_val: "#000000",
+			r: 0,
+			g: 0,
+			b: 0
+		},
+		components: {
+			'rgb-input': {
+				props: {
+					channel: 	String,
+					val: 		Number
+				},
+				template: `
+					<span><h class="channel_label">{{ channel }}:</h>
+						<input type="number" v-model="val" min="0" max="255" class="channel_textbox"></input>
+						<input type="range" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="slider"></input> 
+					</span>
+				`
+			}
+		},
+		methods: {
+			hex: function() {
+				this.hex_val = document.getElementById("hex_color").value;
+				var color = parseColor(this.hex_val);
+				this.r = color[0]; this.g = color[1]; this.b = color[2];
+				recolor_sliders(this.hex_val);
+			},
+			color: function(channel, val) {
+				switch(channel) {
+					case 0:
+						this.r = val;
+						break;
+					case 1:
+						this.g = val;
+						break;
+					case 2:
+						this.b = val;
+						break;
+					default:
+						console.log("Invalid color channel");
+						return;
+				}
+				this.hex_val = rgbToHex(this.r, this.g, this.b);
+				recolor_sliders(this.hex_val);
+			}
+		}
+	})
+
+	function recolor_sliders(color) {
+		var sliders = document.getElementsByClassName("slider-thumb");
+		for (var i = 0; i < sliders.length; i++) {
+			console.log(sliders[i].style);
+			sliders[i].style.background = color;
+		}
+	}
+
+	function parseColor(input) {
+		var m = input.match(/^#([0-9a-f]{6})$/i)[1];
+		if(m) {
+			return [
+				parseInt(m.substr(0,2),16),
+				parseInt(m.substr(2,2),16),
+				parseInt(m.substr(4,2),16)
+			];
+		}
+	}
+
+	function componentToHex(c) {
+		if(typeof c === "string") {
+			c = parseInt(c, 10);
+		}
+		var hex = c.toString(16);
+		return hex.length == 1 ? "0" + hex : hex;
+	}
+
+	function rgbToHex(r, g, b) {
+		return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+	}
+</script>

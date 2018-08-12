@@ -1,0 +1,3 @@
+package: arduino-rgb
+import:
+- package: github.com/zserge/webview

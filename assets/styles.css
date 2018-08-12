@@ -1,0 +1,67 @@
+.slider {
+	-webkit-appearance: none;
+	width: 100%;
+	height: 15px;
+	border-radius: 5px;   
+	background: #d3d3d3;
+	outline: none;
+	opacity: 0.7;
+	-webkit-transition: .2s;
+	transition: opacity .2s;
+}
+
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 25px;
+	height: 25px;
+	border-radius: 50%; 
+	background: #4CAF50;
+	cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+	width: 25px;
+	height: 25px;
+	border-radius: 50%;
+	background: #4CAF50;
+	cursor: pointer;
+}
+
+.channel_label {
+	width: 20px;
+	float: left;
+}
+
+.channel_textbox {
+	width: 50px;
+	float: right;
+}
+
+.content {
+	width: 100%;
+}
+
+.profile_panel {
+	width: 20%;
+	min-width: 40px;
+	height: 100%;
+	float: left;
+	background-color: #98b9de;
+ }
+
+.main {
+	overflow: hidden;
+}
+
+.space_right {
+	width: 10%;
+	min-width: 80px;
+	float: right;
+}
+
+.space_left {
+	width: 10%;
+	min-width: 80px;
+	float: left;
+}
