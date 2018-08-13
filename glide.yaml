@@ -1,3 +1,4 @@
 package: arduino-rgb
 import:
 - package: github.com/zserge/webview
+- package: github.com/ContinentalBreakfast17/seriard

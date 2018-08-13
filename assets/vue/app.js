@@ -5,7 +5,7 @@ var rgb_controller = new Vue({
 		r: 0,
 		g: 0,
 		b: 0,
-		test: tester
+		profile: 0
 	},
 	components: {
 		'rgb-input': {
@@ -26,40 +26,53 @@ var rgb_controller = new Vue({
 			this.hex_val = document.getElementById("hex_color").value;
 			var color = parseColor(this.hex_val);
 			this.r = color[0]; this.g = color[1]; this.b = color[2];
-			recolor_sliders(this.hex_val);
+
+			var msg = {
+				"type": "full",
+				"data": {
+					"color": [this.r, this.g, this.b]
+				}
+			}
+			window.external.invoke(JSON.stringify(msg))
 		},
 		color: function(channel, val) {
 			switch(channel) {
 				case 0:
-					this.r = val;
+					this.r = parseInt(val,10);
 					break;
 				case 1:
-					this.g = val;
+					this.g = parseInt(val,10);
 					break;
 				case 2:
-					this.b = val;
+					this.b = parseInt(val,10);
 					break;
 				default:
 					console.log("Invalid color channel");
 					return;
 			}
 			this.hex_val = rgbToHex(this.r, this.g, this.b);
-			recolor_sliders(this.hex_val);
-			this.testem(this.hex_val);
+
+			var msg = {
+				"type": "channel",
+				"data": {
+					"index": channel,
+					"value": parseInt(val,10)
+				}
+			}
+			window.external.invoke(JSON.stringify(msg))
 		},
-		testem: function(val) {
-			test.hey(val);
+		set: function(profile) {
+			this.r = profile.color[0];
+			this.g = profile.color[1];
+			this.b = profile.color[2];
+			this.hex_val = rgbToHex(this.r, this.g, this.b);
+			this.profile = profile.index;
 		}
+	},
+	created: function() {
+		this.$on('set', this.set);
 	}
 })
-
-function recolor_sliders(color) {
-	var sliders = document.getElementsByClassName("slider-thumb");
-	for (var i = 0; i < sliders.length; i++) {
-		console.log(sliders[i].style);
-		sliders[i].style.background = color;
-	}
-}
 
 function parseColor(input) {
 	var m = input.match(/^#([0-9a-f]{6})$/i)[1];

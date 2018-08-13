@@ -1,6 +1,10 @@
-hash: ab2cbb2ed27297ce7792be79fb38c7c74fdd8cc19d67d91534993dc63dec31fb
-updated: 2018-08-12T11:09:30.149870148-04:00
+hash: 4e2823f3784df0e689ccca414d5e31466c8667be6f2fa4e067826282a795680c
+updated: 2018-08-12T19:57:41.324250648-04:00
 imports:
+- name: github.com/ContinentalBreakfast17/seriard
+  version: bcd53ce43c4cf53a74f96730e37ab84bce8a5fa1
+- name: github.com/mikepb/go-serial
+  version: d5134cecf05a3bb1adc5b6449c9280a2d1078530
 - name: github.com/zserge/webview
   version: 161f899c0deafc1de8a85a5386e3e380510eb204
 testImports: []
