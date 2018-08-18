@@ -2,14 +2,14 @@ var rgb_controller = new Vue({
 	el: "#rgb",
 	data: {
 		hex_val: "#000000",
-		r: 0,
-		g: 0,
-		b: 0,
 		profiles: {
 			current: 0,
 			list: [
 				{
-					name: "init"
+					name: "",
+					mode: "static",
+					speed: 5,
+					color: [0, 0, 0]
 				}
 			]
 		}
@@ -41,34 +41,19 @@ var rgb_controller = new Vue({
 		hex: function() {
 			this.hex_val = document.getElementById("hex_color").value;
 			var color = parseColor(this.hex_val);
-			this.r = color[0]; this.g = color[1]; this.b = color[2];
 			this.profiles.list[this.profiles.current].color = color.slice();
 
 			var msg = {
 				"type": "full",
 				"data": {
-					"color": [this.r, this.g, this.b]
+					"color": color
 				}
 			};
 			window.external.invoke(JSON.stringify(msg));
 		},
-		color: function(channel, val) {
-			switch(channel) {
-				case 0:
-					this.r = parseInt(val,10);
-					break;
-				case 1:
-					this.g = parseInt(val,10);
-					break;
-				case 2:
-					this.b = parseInt(val,10);
-					break;
-				default:
-					console.log("Invalid color channel");
-					return;
-			}
-			this.profiles.list[this.profiles.current].color = [this.r, this.g, this.b];
-			this.hex_val = rgbToHex(this.r, this.g, this.b);
+		setChannel: function(channel, val) {
+			this.profiles.list[this.profiles.current].color[channel] = parseInt(val, 10);
+			this.hex_val = rgbToHex(this.profiles.list[this.profiles.current].color);
 
 			var msg = {
 				"type": "channel",
@@ -112,16 +97,15 @@ var rgb_controller = new Vue({
 		},
 		setCurrentProfile: function(index) {
 			this.profiles.current = index;
-			color = this.profiles.list[this.profiles.current].color;
-			this.r = color[0]; this.g = color[1]; this.b = color[2];
-			this.hex_val = rgbToHex(this.r, this.g, this.b);
+			color = this.profiles.list[index].color;
+			this.hex_val = rgbToHex(color);
 
 			var msg = {
 				"type": "profile_change",
 				"data": {
 					"index": index,
 					"color": color,
-					"strVal": this.profiles.list[this.profiles.current].mode
+					"strVal": this.profiles.list[index].mode
 				}
 			};
 			window.external.invoke(JSON.stringify(msg));
@@ -179,8 +163,7 @@ var rgb_controller = new Vue({
 				this.profiles.list.push(profiles.list[i]);
 			}
 			color = this.profiles.list[this.profiles.current].color;
-			this.r = color[0]; this.g = color[1]; this.b = color[2];
-			this.hex_val = rgbToHex(this.r, this.g, this.b);
+			this.hex_val = rgbToHex(color);
 		}
 	},
 	created: function() {
@@ -207,6 +190,6 @@ function componentToHex(c) {
 	return hex.length == 1 ? "0" + hex : hex;
 }
 
-function rgbToHex(r, g, b) {
-	return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+function rgbToHex(color) {
+	return "#" + componentToHex(color[0]) + componentToHex(color[1]) + componentToHex(color[2]);
 }

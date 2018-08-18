@@ -1,4 +1,6 @@
 #!/bin/bash
+# Run this to generate "full.html" for in browser testing.
+# However, this is currently not functional as there is pre-loaded data in this mug 
 
 echo "<style>" > full.html
 cat styles.css >> full.html
