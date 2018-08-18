@@ -38,16 +38,45 @@
 	float: right;
 }
 
+.profile_button {
+	display:inline-block;
+	padding:0.35em 1.2em;
+	border:0.1em solid #FFFFFF;
+	margin:0 0.3em 0.3em 0;
+	border-radius:0.12em;
+	box-sizing: border-box;
+	text-decoration:none;
+	font-family:'Roboto',sans-serif;
+	font-weight:300;
+	color:#FFFFFF;
+	text-align:center;
+	transition: all 0.2s;
+}
+
+.profile_button:hover {
+	color:#000000;
+	background-color:#FFFFFF;
+}
+
+@media all and (max-width:30em) {
+	.profile_button {
+		display:block;
+		margin:0.4em auto;
+	}
+}
+
 .content {
 	width: 100%;
+	margin: 0;
+	padding: 0;
 }
 
 .profile_panel {
 	width: 20%;
-	min-width: 40px;
+	min-width: 150px;
 	height: 100%;
 	float: left;
-	background-color: #98b9de;
+	background-color: #959595;
  }
 
 .main {

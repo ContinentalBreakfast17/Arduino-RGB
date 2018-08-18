@@ -1,7 +1,9 @@
-<div class="content">
+<div id="rgb" class="content">
 
 	<div class="profile_panel">
-		<h3>  </h3>
+		<span v-for="profile in profiles.list">
+			<profile-button v-bind:name="profile.name" v-bind:index="profile.index" v-on:profile-click="setCurrentProfile($event)"></profile-button><br>
+		</span>
 	</div>
 
 	<div class="space_left">
@@ -12,13 +14,12 @@
 		<h3> </h3>
 	</div>
 
-	<div id="rgb" class="main">
+	<div class="main">
 		<br><br><br><br><br><br><br><br>
 		<input id="hex_color" type="color" id="html5colorpicker" v-on:change="hex" v-model="hex_val" style="width: 100%"><br><br>
 		<rgb-input channel="R" v-bind:val="r" v-on:color-change="color(0, $event)"></rgb-input><br><br>
 		<rgb-input channel="G" v-bind:val="g" v-on:color-change="color(1, $event)"></rgb-input><br><br>
 		<rgb-input channel="B" v-bind:val="b" v-on:color-change="color(2, $event)"></rgb-input><br><br>
-		
 	</div>
 
 </div>

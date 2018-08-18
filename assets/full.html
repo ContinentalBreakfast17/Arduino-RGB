@@ -39,16 +39,43 @@
 	float: right;
 }
 
+.profile_button {
+	display:inline-block;
+	padding:0.35em 1.2em;
+	border:0.1em solid #FFFFFF;
+	margin:0 0.3em 0.3em 0;
+	border-radius:0.12em;
+	box-sizing: border-box;
+	text-decoration:none;
+	font-family:'Roboto',sans-serif;
+	font-weight:300;
+	color:#FFFFFF;
+	text-align:center;
+	transition: all 0.2s;
+}
+
+.profile_button:hover {
+	color:#000000;
+	background-color:#FFFFFF;
+}
+
+@media all and (max-width:30em) {
+	.profile_button {
+		display:block;
+		margin:0.4em auto;
+	}
+}
+
 .content {
 	width: 100%;
 }
 
 .profile_panel {
 	width: 20%;
-	min-width: 40px;
+	min-width: 150px;
 	height: 100%;
 	float: left;
-	background-color: #98b9de;
+	background-color: #959595;
  }
 
 .main {
@@ -67,11 +94,12 @@
 	float: left;
 }
 </style>
-
-<div class="content">
+<div id="rgb" class="content">
 
 	<div class="profile_panel">
-		<h3>  </h3>
+		<span v-for="profile in profiles.list" style="margin: auto;">
+			<profile-button v-bind:name="profile.name" v-bind:index="profile.index" v-on:profile-click="setProfile($event)"></profile-button><br>
+		</span>
 	</div>
 
 	<div class="space_left">
@@ -82,7 +110,7 @@
 		<h3> </h3>
 	</div>
 
-	<div id="rgb" class="main">
+	<div class="main">
 		<br><br><br><br><br><br><br><br>
 		<input id="hex_color" type="color" id="html5colorpicker" v-on:change="hex" v-model="hex_val" style="width: 100%"><br><br>
 		<rgb-input channel="R" v-bind:val="r" v-on:color-change="color(0, $event)"></rgb-input><br><br>
@@ -91,7 +119,6 @@
 	</div>
 
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script>
 var rgb_controller = new Vue({
@@ -101,7 +128,19 @@ var rgb_controller = new Vue({
 		r: 0,
 		g: 0,
 		b: 0,
-		profile: 0
+		profiles: {
+			current: 0,
+			list: [
+				{
+					name: "whaddup",
+					index: 0
+				},
+				{
+					name: "double",
+					index: 1
+				}
+			]
+		}
 	},
 	components: {
 		'rgb-input': {
@@ -111,9 +150,18 @@ var rgb_controller = new Vue({
 			},
 			template: `
 				<span><h class="channel_label">{{ channel }}:</h>
-					<input type="number" v-model="val" min="0" max="255" class="channel_textbox"></input>
+					<input type="number" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="channel_textbox"></input>
 					<input type="range" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="slider"></input> 
 				</span>
+			`
+		},
+		'profile-button': {
+			props: {
+				name: 		String,
+				index: 		Number
+			},
+			template: `
+				<button v-on:click="$emit('profile-click', index)" class="profile_button"> {{ name }} </button>
 			`
 		}
 	},
@@ -134,13 +182,13 @@ var rgb_controller = new Vue({
 		color: function(channel, val) {
 			switch(channel) {
 				case 0:
-					this.r = val;
+					this.r = parseInt(val,10);
 					break;
 				case 1:
-					this.g = val;
+					this.g = parseInt(val,10);
 					break;
 				case 2:
-					this.b = val;
+					this.b = parseInt(val,10);
 					break;
 				default:
 					console.log("Invalid color channel");
@@ -151,19 +199,26 @@ var rgb_controller = new Vue({
 			var msg = {
 				"type": "channel",
 				"data": {
-					"channel": channel,
-					"value": val
+					"index": channel,
+					"value": parseInt(val,10)
 				}
 			}
 			window.external.invoke(JSON.stringify(msg))
 		},
-		set_profile: function(stuff) {
-			/*this.r = red;
-			this.g = green;
-			this.b = blue;
-			this.profile = index;*/
-			console.log(stuff);
+		set: function(profile) {
+			this.r = profile.color[0];
+			this.g = profile.color[1];
+			this.b = profile.color[2];
+			this.hex_val = rgbToHex(this.r, this.g, this.b);
+			this.profile = profile.index;
+		},
+		setProfile: function(index) {
+			this.profiles.current = index;
+			console.log(index);
 		}
+	},
+	created: function() {
+		this.$on('set', this.set);
 	}
 })
 

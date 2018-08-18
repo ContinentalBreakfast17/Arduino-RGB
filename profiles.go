@@ -4,11 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-)
 
-const (
-	SINGLE_CHANNEL_CHANGE = "channel"
-	ALL_CHANNEL_CHANGE = "full"
+	"github.com/zserge/webview"
 )
 
 type RGB struct {
@@ -19,39 +16,35 @@ type RGB struct {
 }
 
 type Profiles struct {
-	List	[]RGB 	`json:"profiles"`
+	List	[]RGB 	`json:"list"`
 	Current	int 	`json:"current"`
 }
 
 func initProfiles() Profiles {
 	raw, err := ioutil.ReadFile(os.Getenv("RGB_PROFILES"))
-	if err != nil {
-		panic(err)
-	}
+	errorHandler("Failed to read profiles", err, false)
 
 	var p Profiles
 	err = json.Unmarshal(raw, &p)
-	if err != nil {
-		panic(err)
-	}
+	errorHandler("Failed to unmarshal profiles", err, false)
 	
 	return p
 }
 
-func saveProfiles(p Profiles) {
+func (p *Profiles) save() {
 	f, err := os.Create(os.Getenv("RGB_PROFILES"))
-	if err != nil {
-		panic(err)
-	}
+	errorHandler("Failed to open profiles", err, false)
 	defer f.Close()
 
 	content, err := json.Marshal(p)
-	if err != nil {
-		panic(err)
-	}
+	errorHandler("Failed to marshal profiles", err, false)
 
 	_, err = f.Write(content)
-	if err != nil {
-		panic(err)
-	}
+	errorHandler("Failed to write profiles", err, false)
+}
+
+func (p *Profiles) send(w webview.WebView) {
+	msg, err := json.Marshal(p)
+	errorHandler("Failed to marshal profiles", err, true)
+	w.Eval("rgb_controller.$emit('loadProfiles', " + string(msg) + " )")
 }

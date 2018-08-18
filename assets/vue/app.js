@@ -5,7 +5,10 @@ var rgb_controller = new Vue({
 		r: 0,
 		g: 0,
 		b: 0,
-		profile: 0
+		profiles: {
+			current: 0,
+			list: []
+		}
 	},
 	components: {
 		'rgb-input': {
@@ -15,9 +18,18 @@ var rgb_controller = new Vue({
 			},
 			template: `
 				<span><h class="channel_label">{{ channel }}:</h>
-					<input type="number" v-model="val" min="0" max="255" class="channel_textbox"></input>
+					<input type="number" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="channel_textbox"></input>
 					<input type="range" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="slider"></input> 
 				</span>
+			`
+		},
+		'profile-button': {
+			props: {
+				name: 		String,
+				index: 		Number
+			},
+			template: `
+				<button v-on:click="$emit('profile-click', index)" class="profile_button"> {{ name }} </button>
 			`
 		}
 	},
@@ -26,6 +38,7 @@ var rgb_controller = new Vue({
 			this.hex_val = document.getElementById("hex_color").value;
 			var color = parseColor(this.hex_val);
 			this.r = color[0]; this.g = color[1]; this.b = color[2];
+			this.profiles.list[this.profiles.current].color = color.slice();
 
 			var msg = {
 				"type": "full",
@@ -61,16 +74,32 @@ var rgb_controller = new Vue({
 			}
 			window.external.invoke(JSON.stringify(msg))
 		},
-		set: function(profile) {
-			this.r = profile.color[0];
-			this.g = profile.color[1];
-			this.b = profile.color[2];
+		setCurrentProfile: function(index) {
+			this.profiles.current = index;
+			color = this.profiles.list[this.profiles.current].color;
+			this.r = color[0]; this.g = color[1]; this.b = color[2];
 			this.hex_val = rgbToHex(this.r, this.g, this.b);
-			this.profile = profile.index;
+
+			var msg = {
+				"type": "profile_change",
+				"data": {
+					"index": index
+				}
+			}
+			window.external.invoke(JSON.stringify(msg))
+		},
+		loadProfiles: function(profiles) {
+			this.profiles.current = profiles.current;
+			for (var i = 0; i < profiles.list.length; i++) {
+				this.profiles.list.push(profiles.list[i])
+			}
+			color = this.profiles.list[this.profiles.current].color;
+			this.r = color[0]; this.g = color[1]; this.b = color[2];
+			this.hex_val = rgbToHex(this.r, this.g, this.b);
 		}
 	},
 	created: function() {
-		this.$on('set', this.set);
+		this.$on('loadProfiles', this.loadProfiles);
 	}
 })
 
