@@ -17,6 +17,11 @@ const (
 	SINGLE_CHANNEL_CHANGE = "channel"
 	ALL_CHANNEL_CHANGE = "full"
 	PROFILE_CHANGE = "profile_change"
+	ADD_PROFILE = "add_profile"
+	DELETE_PROFILE = "delete_profile"
+	NAME_CHANGE = "name_change"
+	MODE_CHANGE = "mode_change"
+	SPEED_CHANGE = "speed_change"
 )
 
 type Message struct {
@@ -24,6 +29,7 @@ type Message struct {
 	Index 	int 	`json:"index,omitempty"`
 	Value 	int 	`json:"value,omitempty"`
 	StrVal	string	`json:"strVal,omitempty"`
+	Profile RGB		`json:"profile"`
 }
 
 type MessageHolder struct {
@@ -46,7 +52,19 @@ func handle(w webview.WebView, msg string) {
 			writeColors(arduino, message.Data.Color)
 		case PROFILE_CHANGE:
 			profiles.setCurrent(message.Data.Index)
-			writeColors(arduino, profiles.getColor())
+			writeColors(arduino, message.Data.Color)
+		case ADD_PROFILE:
+			profiles.addProfile(message.Data.Profile)
+		case DELETE_PROFILE:
+			profiles.deleteProfile(message.Data.Index)
+		case NAME_CHANGE:
+			profiles.setName(message.Data.Index, message.Data.StrVal)
+		case MODE_CHANGE:
+			profiles.setMode(message.Data.Index, message.Data.StrVal)
+			writeMode(arduino, message.Data.StrVal)
+		case SPEED_CHANGE:
+			profiles.setSpeed(message.Data.Index, message.Data.Value)
+			writeSpeed(arduino, message.Data.Value)
 		default:
 			errorHandler("Failed to read message", errors.New("Unrecognized message type"), true)
 	}
@@ -87,6 +105,7 @@ func main() {
 
 		profiles.send(w)	
 		writeColors(arduino, profiles.getColor())
+		writeMode(arduino, profiles.getMode())
 	})
 	w.Run()
 	

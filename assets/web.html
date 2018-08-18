@@ -4,6 +4,8 @@
 		<span v-for="profile in profiles.list">
 			<profile-button v-bind:name="profile.name" v-bind:index="profile.index" v-on:profile-click="setCurrentProfile($event)"></profile-button><br>
 		</span>
+		<br>
+		<profile-button name="+" v-on:profile-click="newProfile()"></profile-button><br>
 	</div>
 
 	<div class="space_left">
@@ -15,7 +17,19 @@
 	</div>
 
 	<div class="main">
-		<br><br><br><br><br><br><br><br>
+		<br><br><br><br>
+
+		<input type="text" v-model="profiles.list[profiles.current].name" v-on:change="setName()"></input>
+		<profile-button name="x" v-on:profile-click="deleteProfile()"></profile-button><br>
+
+		<select v-model="profiles.list[profiles.current].mode" v-on:change="setMode()">
+			<option value="static">Static</option>
+			<option value="rainbow">Rainbow</option>
+		</select>
+		<span v-if='profiles.list[profiles.current].mode != "static"'> Speed: <input type="number" v-model="profiles.list[profiles.current].speed" v-on:change="setSpeed()" min="0" max="255"></input> </span>
+		<br>
+
+		<br><br><br><br>
 		<input id="hex_color" type="color" id="html5colorpicker" v-on:change="hex" v-model="hex_val" style="width: 100%"><br><br>
 		<rgb-input channel="R" v-bind:val="r" v-on:color-change="color(0, $event)"></rgb-input><br><br>
 		<rgb-input channel="G" v-bind:val="g" v-on:color-change="color(1, $event)"></rgb-input><br><br>

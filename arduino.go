@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/ContinentalBreakfast17/seriard"
@@ -32,4 +33,14 @@ func writeColors(arduino *seriard.Arduino, colors []int) {
 		_, err := arduino.AnalogWrite(RGB_PINS[i], uint8(colors[i]))
 		errorHandler("Failed to write to Arduino", err, true)
 	}
+}
+
+func writeMode(arduino *seriard.Arduino, mode string) {
+	err := arduino.CustomCommand("set_rgb_mode", mode)
+	errorHandler("Failed to set rgb mode", err, true)
+}
+
+func writeSpeed(arduino *seriard.Arduino, speed int) {
+	err := arduino.CustomCommand("set_speed", fmt.Sprintf("%d", speed))
+	errorHandler("Failed to set rgb speed", err, true)
 }

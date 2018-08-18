@@ -7,7 +7,11 @@ var rgb_controller = new Vue({
 		b: 0,
 		profiles: {
 			current: 0,
-			list: []
+			list: [
+				{
+					name: "init"
+				}
+			]
 		}
 	},
 	components: {
@@ -45,8 +49,8 @@ var rgb_controller = new Vue({
 				"data": {
 					"color": [this.r, this.g, this.b]
 				}
-			}
-			window.external.invoke(JSON.stringify(msg))
+			};
+			window.external.invoke(JSON.stringify(msg));
 		},
 		color: function(channel, val) {
 			switch(channel) {
@@ -63,6 +67,7 @@ var rgb_controller = new Vue({
 					console.log("Invalid color channel");
 					return;
 			}
+			this.profiles.list[this.profiles.current].color = [this.r, this.g, this.b];
 			this.hex_val = rgbToHex(this.r, this.g, this.b);
 
 			var msg = {
@@ -71,8 +76,39 @@ var rgb_controller = new Vue({
 					"index": channel,
 					"value": parseInt(val,10)
 				}
-			}
-			window.external.invoke(JSON.stringify(msg))
+			};
+			window.external.invoke(JSON.stringify(msg));
+		},
+		setName: function() {
+			var msg = {
+				"type": "name_change",
+				"data": {
+					"index": this.profiles.current,
+					"strVal": this.profiles.list[this.profiles.current].name
+				}
+			};
+			window.external.invoke(JSON.stringify(msg));
+		},
+		setMode: function() {
+			var msg = {
+				"type": "mode_change",
+				"data": {
+					"index": this.profiles.current,
+					"strVal": this.profiles.list[this.profiles.current].mode
+				}
+			};
+			window.external.invoke(JSON.stringify(msg));
+			this.setSpeed();
+		},
+		setSpeed: function() {
+			var msg = {
+				"type": "speed_change",
+				"data": {
+					"index": this.profiles.current,
+					"value": parseInt(this.profiles.list[this.profiles.current].speed, 10)
+				}
+			};
+			window.external.invoke(JSON.stringify(msg));
 		},
 		setCurrentProfile: function(index) {
 			this.profiles.current = index;
@@ -83,15 +119,64 @@ var rgb_controller = new Vue({
 			var msg = {
 				"type": "profile_change",
 				"data": {
+					"index": index,
+					"color": color,
+					"strVal": this.profiles.list[this.profiles.current].mode
+				}
+			};
+			window.external.invoke(JSON.stringify(msg));
+			this.setMode();
+		},
+		newProfile: function() {
+			profile = {
+				color: [
+					Math.floor(Math.random() * 256),
+					Math.floor(Math.random() * 256),
+					Math.floor(Math.random() * 256)
+				],
+				index: this.profiles.list.length,
+				mode: "static",
+				name: "Profile " + (this.profiles.list.length + 1).toString(),
+				speed: 5
+			};
+			this.profiles.list.push(profile);
+
+			var msg = {
+				"type": "add_profile",
+				"data": {
+					"profile": profile
+				}
+			};
+			window.external.invoke(JSON.stringify(msg));
+			this.setCurrentProfile(profile.index);
+		},
+		deleteProfile: function() {
+			if(this.profiles.list.length == 1) {
+				return
+			}
+
+			index = this.profiles.current;
+			for(i = this.profiles.current; i < this.profiles.list.length-1; i++) {
+				this.profiles.list[i] = this.profiles.list[i+1];
+				this.profiles.list[i].index--;
+			}
+			this.profiles.list.pop();
+
+			var msg = {
+				"type": "delete_profile",
+				"data": {
 					"index": index
 				}
-			}
-			window.external.invoke(JSON.stringify(msg))
+			};
+			window.external.invoke(JSON.stringify(msg));
+			if(this.profiles.current == this.profiles.list.length) this.setCurrentProfile(this.profiles.current - 1);
+			else this.setCurrentProfile(this.profiles.current);
 		},
 		loadProfiles: function(profiles) {
+			this.profiles.list.pop();
 			this.profiles.current = profiles.current;
 			for (var i = 0; i < profiles.list.length; i++) {
-				this.profiles.list.push(profiles.list[i])
+				this.profiles.list.push(profiles.list[i]);
 			}
 			color = this.profiles.list[this.profiles.current].color;
 			this.r = color[0]; this.g = color[1]; this.b = color[2];

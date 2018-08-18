@@ -146,7 +146,7 @@ func (arduino *Arduino) getResponse(expected int) (int, error) {
 	pin, err := strconv.Atoi(vals[0])
 	if err != nil {
 		return 0, err 
-	} else if pin != expected {
+	} else if pin > -1 && pin != expected {
 		return 0, errors.New(fmt.Sprintf("arduino_serial: Wrong pin readout received from arudino: expected '%d', got '%d'", expected, pin))
 	}
 
@@ -161,6 +161,11 @@ func (arduino *Arduino) SetPinMode(pin, mode int) (int, error) {
 	}
 
 	return arduino.write(pin, mode, fmt.Sprintf("set_pin_mode %d %d", pin, mode))
+}
+
+func (arduino *Arduino) CustomCommand(command, parameters string) error {
+	_, err := arduino.write(-1, -1, fmt.Sprintf("%s %s", command, parameters))
+	return err
 }
 
 func in(haystack []int, needle int) bool {

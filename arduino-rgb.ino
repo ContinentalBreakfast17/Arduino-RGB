@@ -25,12 +25,14 @@ char* buffer;
 TTS tts(3);
 char* rgb_mode;
 
+int color[3];
 int rainbow[3];
 int rainbow_index;
 int speed;
 
 int doCommand(char* params, int (*function)(int*), int argc);
 int changeMode(char* params);
+int changeSpeed(char* params);
 void success(int v1, int v2);
 void error(char* error_message, int blinks);
 void blink(int blinks);
@@ -55,6 +57,7 @@ void setup() {
 	memset(rgb_mode, 0, MESSAGE_SIZE+1);
 	strcpy(rgb_mode, STATIC);
 
+	memset(color, 0, sizeof(int)*3);
 	memset(rainbow, 0, sizeof(int)*3);
 	rainbow[0] = 255;
 	rainbow_index = 0;
@@ -97,6 +100,8 @@ void loop() {
 			result = doCommand(params, &pinModeWrapper, 2);
 		} else if(strcmp("set_rgb_mode", command) == 0) {
 			result = changeMode(params);
+		} else if(strcmp("set_speed", command) == 0) {
+			result = changeSpeed(params);
 		} else {
 			error("Unknown command", ERR_UNKWN_CMD);
 			return;
@@ -127,15 +132,29 @@ int doCommand(char* params, int (*function)(int*), int argc) {
 int changeMode(char* params) {
 	char tmp[MESSAGE_SIZE+1];
 	memset(tmp, 0, MESSAGE_SIZE+1);
-	int tmp_speed;
-	int n = sscanf(params, "%s %d", tmp, &tmp_speed);
-	if(n != 2) return -1;
+	int n = sscanf(params, "%s ", tmp);
+	if(n != 1) return -1;
 	if(strcmp(STATIC, tmp) == 0 || strcmp(RAINBOW, tmp) == 0) {
+		if(strcmp(STATIC, tmp) == 0) {
+			analogWrite(RED, color[0]);
+			analogWrite(GREEN, color[1]);
+			analogWrite(BLUE, color[2]);
+		}
 		memset(rgb_mode, 0, MESSAGE_SIZE+1);
 		strcpy(rgb_mode, tmp);
-		speed = tmp_speed;
+		success(-1, -1);
 		return 0;
 	} else return -1;
+}
+
+int changeSpeed(char* params) {
+	int tmp;
+	int n = sscanf(params, "%d", &tmp);
+	if(n != 1) return -1;
+	if(tmp <= 0) return -1;
+	speed = tmp;
+	success(-1, -1);
+	return 0;
 }
 
 void success(int v1, int v2) {
@@ -202,6 +221,10 @@ int digitalWriteWrapper(int* args) {
 
 int analogWriteWrapper(int* args) {
 	analogWrite(args[0], args[1]);
+	// update color
+	if(args[0] == RED) color[0] = args[1];
+	else if(args[0] == GREEN) color[1] = args[1];
+	else if(args[0] == BLUE) color[2] = args[1];
 	success(args[0], args[1]);
 	return 0; 
 }
