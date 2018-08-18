@@ -39,14 +39,14 @@ func handle(w webview.WebView, msg string) {
 
 	switch message.Type {
 		case SINGLE_CHANNEL_CHANGE:
-			profiles.List[profiles.Current].Color[message.Data.Index] = message.Data.Value
+			profiles.setColorChannel(message.Data.Index, message.Data.Value)
 			writeColor(arduino, message.Data.Index, message.Data.Value)
 		case ALL_CHANNEL_CHANGE:
-			copy(profiles.List[profiles.Current].Color, message.Data.Color)
+			profiles.setColor(message.Data.Color)
 			writeColors(arduino, message.Data.Color)
 		case PROFILE_CHANGE:
-			profiles.Current = message.Data.Index
-			writeColors(arduino, profiles.List[profiles.Current].Color)
+			profiles.setCurrent(message.Data.Index)
+			writeColors(arduino, profiles.getColor())
 		default:
 			errorHandler("Failed to read message", errors.New("Unrecognized message type"), true)
 	}
@@ -86,7 +86,7 @@ func main() {
 		w.Eval(string(MustAsset("assets/vue/app.js")))
 
 		profiles.send(w)	
-		writeColors(arduino, profiles.List[profiles.Current].Color)
+		writeColors(arduino, profiles.getColor())
 	})
 	w.Run()
 	

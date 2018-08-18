@@ -48,3 +48,19 @@ func (p *Profiles) send(w webview.WebView) {
 	errorHandler("Failed to marshal profiles", err, true)
 	w.Eval("rgb_controller.$emit('loadProfiles', " + string(msg) + " )")
 }
+
+func (p *Profiles) getColor() []int {
+	return p.List[p.Current].Color
+}
+
+func (p *Profiles) setColor(color []int) {
+	copy(p.List[p.Current].Color, color)
+}
+
+func (p *Profiles) setColorChannel(channel, val int) {
+	p.List[p.Current].Color[channel] = val
+}
+
+func (p *Profiles) setCurrent(index int) {
+	p.Current = index
+}
