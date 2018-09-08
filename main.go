@@ -74,13 +74,13 @@ var profiles Profiles
 var arduino *seriard.Arduino
 
 func main() {
-	// Read RGB Profiles and connect to arduino
-	profiles = initProfiles()
-	arduino = initArduino()
-
 	// Read html
 	html, err := ioutil.ReadFile("assets/web.html")
 	errorHandler("Failed to read web.html", err, false)
+
+	// Read RGB Profiles and connect to arduino
+	profiles = initProfiles()
+	arduino = initArduino()
 
 	// Intialize Webview
 	w := webview.New(webview.Settings{
@@ -88,6 +88,9 @@ func main() {
 		URL: `data:text/html,` + url.PathEscape(string(html)),
 		ExternalInvokeCallback: handle,
 		Debug: true,
+		Resizable: true,
+		Width: 800,
+		Height: 600,
 	})
 	defer w.Exit()
 	defer profiles.save()
@@ -104,8 +107,6 @@ func main() {
 		w.Eval(string(MustAsset("assets/vue/app.js")))
 
 		profiles.send(w)	
-		writeColors(arduino, profiles.getColor())
-		writeMode(arduino, profiles.getMode())
 	})
 	w.Run()
 	
@@ -113,6 +114,7 @@ func main() {
 
 func errorHandler(msg string, err error, shouldSave bool) {
 	if err != nil {
+		arduino.Disconnect()
 		log.Printf("%s", msg)
 		if shouldSave {
 			profiles.save()

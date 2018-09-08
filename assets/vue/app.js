@@ -2,6 +2,11 @@ var rgb_controller = new Vue({
 	el: "#rgb",
 	data: {
 		hex_val: "#000000",
+		gradients: {
+			R: ["#000000", "#ff0000"],
+			G: ["#000000", "#00ff00"],
+			B: ["#000000", "#0000ff"]
+		},
 		profiles: {
 			current: 0,
 			list: [
@@ -18,12 +23,14 @@ var rgb_controller = new Vue({
 		'rgb-input': {
 			props: {
 				channel: 	String,
-				val: 		Number
+				val: 		Number,
+				gradient: 	Array,
 			},
 			template: `
-				<span><h class="channel_label">{{ channel }}:</h>
+				<span class="rgb-container">
+					<h class="channel_label">{{ channel }}:</h>
 					<input type="number" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="channel_textbox"></input>
-					<input type="range" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="slider"></input> 
+					<input type="range" v-model="val" v-on:change="$emit('color-change', val)" min="0" max="255" class="slider" v-bind:style="{ 'background-image' : 'linear-gradient(to right, ' + gradient[0] + ', ' + gradient[1] +')' }"></input> 
 				</span>
 			`
 		},
@@ -33,15 +40,25 @@ var rgb_controller = new Vue({
 				index: 		Number
 			},
 			template: `
-				<button v-on:click="$emit('profile-click', index)" class="profile_button"> {{ name }} </button>
+				<span>
+					<button v-on:click="$emit('profile-click', index)" class="button"> {{ name }} </button> 
+					<!--<button v-on:click="$emit('profile-click', index)" class="button"> - </button>-->
+				</span>
 			`
 		}
 	},
 	methods: {
+		fixGradients: function() {
+			color = this.profiles.list[this.profiles.current].color;
+			this.gradients.R = [rgbToHex([0, color[1], color[2]]), rgbToHex([255, color[1], color[2]])];
+			this.gradients.G = [rgbToHex([color[0], 0, color[2]]), rgbToHex([color[0], 255, color[2]])];
+			this.gradients.B = [rgbToHex([color[0], color[1], 0]), rgbToHex([color[0], color[1], 255])];
+		},
 		hex: function() {
 			this.hex_val = document.getElementById("hex_color").value;
 			var color = parseColor(this.hex_val);
 			this.profiles.list[this.profiles.current].color = color.slice();
+			this.fixGradients();
 
 			var msg = {
 				"type": "full",
@@ -54,6 +71,7 @@ var rgb_controller = new Vue({
 		setChannel: function(channel, val) {
 			this.profiles.list[this.profiles.current].color[channel] = parseInt(val, 10);
 			this.hex_val = rgbToHex(this.profiles.list[this.profiles.current].color);
+			this.fixGradients();
 
 			var msg = {
 				"type": "channel",
@@ -99,13 +117,16 @@ var rgb_controller = new Vue({
 			this.profiles.current = index;
 			color = this.profiles.list[index].color;
 			this.hex_val = rgbToHex(color);
+			this.fixGradients();
+			this.$nextTick(() => {
+				recolorProfileButtons(this.profiles.current);
+			});
 
 			var msg = {
 				"type": "profile_change",
 				"data": {
 					"index": index,
-					"color": color,
-					"strVal": this.profiles.list[index].mode
+					"color": color
 				}
 			};
 			window.external.invoke(JSON.stringify(msg));
@@ -158,18 +179,24 @@ var rgb_controller = new Vue({
 		},
 		loadProfiles: function(profiles) {
 			this.profiles.list.pop();
-			this.profiles.current = profiles.current;
 			for (var i = 0; i < profiles.list.length; i++) {
 				this.profiles.list.push(profiles.list[i]);
 			}
-			color = this.profiles.list[this.profiles.current].color;
-			this.hex_val = rgbToHex(color);
+			this.setCurrentProfile(profiles.current);
 		}
 	},
 	created: function() {
 		this.$on('loadProfiles', this.loadProfiles);
 	}
 })
+
+function recolorProfileButtons(index) {
+	var buttons = document.getElementsByClassName("button");
+	for (var i = 0; i < buttons.length; i++) {
+		buttons[i].style.border = "0.1em solid #FFFFFF";
+	}
+	buttons[index].style.border = "0.1em solid #505050";
+}
 
 function parseColor(input) {
 	var m = input.match(/^#([0-9a-f]{6})$/i)[1];

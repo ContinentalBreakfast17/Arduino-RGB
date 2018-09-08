@@ -1,8 +1,8 @@
 hash: 4e2823f3784df0e689ccca414d5e31466c8667be6f2fa4e067826282a795680c
-updated: 2018-08-18T16:39:56.723649151-04:00
+updated: 2018-09-08T19:32:55.987956649-04:00
 imports:
 - name: github.com/ContinentalBreakfast17/seriard
-  version: 28cee8e4113335af7d51e917f664d551f4d4f987
+  version: bfde945da2a072a1017ab34ca5bca8718c5814fb
 - name: github.com/mikepb/go-serial
   version: d5134cecf05a3bb1adc5b6449c9280a2d1078530
 - name: github.com/zserge/webview

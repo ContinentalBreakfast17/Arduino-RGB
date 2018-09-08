@@ -1,9 +1,7 @@
-#include "TTS.h"
-
 // all communications will be as long as the macro below
 #define MESSAGE_SIZE 	32
 // feel free to change the baud rate as desired
-#define BAUDRATE 		9600
+#define BAUDRATE 		115200
 // this pin will be used to blink error messages
 #define ERROR_PIN 		2
 // the number of milliseconds for delay between error blinks
@@ -16,19 +14,24 @@
 // RGB modes
 #define STATIC 			"static"
 #define RAINBOW 		"rainbow"
+#define FADE 			"fade"
+#define STROBE 			"strobe"
 // RGB pins
 #define RED 			9
 #define GREEN			10
 #define BLUE			11
 
 char* buffer;
-TTS tts(3);
 char* rgb_mode;
 
 int color[3];
 int rainbow[3];
 int rainbow_index;
+int strobe;
+float fade;
+int fade_dir;
 int speed;
+unsigned long then;
 
 int doCommand(char* params, int (*function)(int*), int argc);
 int changeMode(char* params);
@@ -44,24 +47,34 @@ int digitalReadWrapper(int* args);
 int analogReadWrapper(int* args);
 int pinModeWrapper(int* args);
 
+void doRainbow();
+void doStrobe();
+void doFade();
+
 void setup() {
 	// initialize any pins as needed here
 	// setting pins to output may help if you are experiencing irregular voltage floating on startup
 	pinMode(ERROR_PIN, OUTPUT);
-  	tts.setPitch(8);
+	pinMode(RED, OUTPUT);
+	pinMode(GREEN, OUTPUT);
+	pinMode(BLUE, OUTPUT);
 
 	buffer = (char*)malloc(sizeof(char)*(MESSAGE_SIZE + 1));
 	buffer[MESSAGE_SIZE] = 0;
 
 	rgb_mode = (char*)malloc(sizeof(char)*(MESSAGE_SIZE + 1));
 	memset(rgb_mode, 0, MESSAGE_SIZE+1);
-	strcpy(rgb_mode, STATIC);
+	strcpy(rgb_mode, RAINBOW);
 
 	memset(color, 0, sizeof(int)*3);
 	memset(rainbow, 0, sizeof(int)*3);
 	rainbow[0] = 255;
 	rainbow_index = 0;
 	speed = 5;
+	strobe = 1;
+	fade = 1;
+	fade_dir = -1;
+	then = millis();
 
 	Serial.begin(BAUDRATE);
 }
@@ -111,8 +124,18 @@ void loop() {
 			error("Bad parameters", ERR_BAD_PARAMS);
 			return;
 		}
-	} else if(strcmp(RAINBOW, rgb_mode) == 0) {
-		doRainbow();
+	} else if(strcmp(STATIC, rgb_mode) != 0) {
+
+		if(millis() - then > speed) {
+			if(strcmp(RAINBOW, rgb_mode) == 0) {
+				doRainbow();
+			} else if(strcmp(STROBE, rgb_mode) == 0) {
+				doStrobe();
+			} else if(strcmp(FADE, rgb_mode) == 0) {
+				doFade();
+			}
+			then = millis();
+		}
 	}
 }
 
@@ -134,8 +157,9 @@ int changeMode(char* params) {
 	memset(tmp, 0, MESSAGE_SIZE+1);
 	int n = sscanf(params, "%s ", tmp);
 	if(n != 1) return -1;
-	if(strcmp(STATIC, tmp) == 0 || strcmp(RAINBOW, tmp) == 0) {
-		if(strcmp(STATIC, tmp) == 0) {
+	if(strcmp(STATIC, tmp) == 0 || strcmp(RAINBOW, tmp) == 0 || 
+		strcmp(FADE, tmp) == 0 || strcmp(STROBE, tmp) == 0) {
+		if(strcmp(RAINBOW, tmp) != 0) {
 			analogWrite(RED, color[0]);
 			analogWrite(GREEN, color[1]);
 			analogWrite(BLUE, color[2]);
@@ -173,7 +197,6 @@ void error(const char* error_message, int blinks) {
 
 	Serial.print(msg);
 	blink(blinks);
-	tts.sayText(error_message);
 }
 
 void blink(int blinks) {
@@ -188,18 +211,6 @@ void blink(int blinks) {
 		delay(BLINK_TIME);
 	}
 	digitalWrite(ERROR_PIN, val);
-}
-
-void doRainbow() {
-	rainbow[rainbow_index]--;
-	rainbow[(rainbow_index == 2) ? (0) : (rainbow_index + 1)]++;
-	if(rainbow[rainbow_index] == 0) {
-		rainbow_index = (rainbow_index == 2) ? (0) : (rainbow_index + 1);
-	}
-	analogWrite(RED, rainbow[0]);
-	analogWrite(GREEN, rainbow[1]);
-	analogWrite(BLUE, rainbow[2]);
-	delay(speed);
 }
 
 // returns a pointer to the next white space in s, or NULL if there is no more white space
@@ -245,4 +256,33 @@ int pinModeWrapper(int* args) {
 	pinMode(args[0], args[1]);
 	success(args[0], args[1]);
 	return 0; 
+}
+
+// RGB Modes
+
+void doRainbow() {
+	rainbow[rainbow_index]--;
+	rainbow[(rainbow_index == 2) ? (0) : (rainbow_index + 1)]++;
+	if(rainbow[rainbow_index] == 0) {
+		rainbow_index = (rainbow_index == 2) ? (0) : (rainbow_index + 1);
+	}
+	analogWrite(RED, rainbow[0]);
+	analogWrite(GREEN, rainbow[1]);
+	analogWrite(BLUE, rainbow[2]);
+}
+
+void doStrobe() {
+	strobe = !strobe;
+	analogWrite(RED, color[0]*strobe);
+	analogWrite(GREEN, color[1]*strobe);
+	analogWrite(BLUE, color[2]*strobe);
+}
+
+void doFade() {
+	fade += fade_dir;
+	if(fade >= 255) fade_dir = -1;
+	else if(fade <= 0) fade_dir = 1;
+	analogWrite(RED, color[0]*(fade/255));
+	analogWrite(GREEN, color[1]*(fade/255));
+	analogWrite(BLUE, color[2]*(fade/255));
 }

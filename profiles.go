@@ -50,14 +50,6 @@ func (p *Profiles) send(w webview.WebView) {
 	w.Eval("rgb_controller.$emit('loadProfiles', " + string(msg) + " )")
 }
 
-func (p *Profiles) getColor() []int {
-	return p.List[p.Current].Color
-}
-
-func (p *Profiles) getMode() string {
-	return p.List[p.Current].Mode
-}
-
 func (p *Profiles) setColor(color []int) {
 	copy(p.List[p.Current].Color, color)
 }
